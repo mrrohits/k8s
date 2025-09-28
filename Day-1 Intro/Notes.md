@@ -82,8 +82,9 @@ kubeadm init --apiserver-advertise-address=1<your_ip> --ignore-preflight-errors=
 Configure kubeconfig:
 
 mkdir -p $HOME/.kube
+```
 cp /etc/kubernetes/admin.conf $HOME/.kube/config
-
+```
 ### 🎯 Why Kubernetes?
 
 #### Kubernetes is an open-source container orchestration tool that provides:
@@ -170,10 +171,10 @@ VMware Tanzu
 
 # ✅ Summary
 
-Installed Kubernetes with CRI-O runtime
+#### Installed Kubernetes with CRI-O runtime
 
-Understood Kubernetes architecture (Control Plane & Worker Nodes)
+#### Understood Kubernetes architecture (Control Plane & Worker Nodes)
 
-Learned advantages: management, reliability, scalability, RBAC, HA
+#### Learned advantages: management, reliability, scalability, RBAC, HA
 
-Deployment options: Self-managed, Cloud-managed, Enterprise
+#### Deployment options: Self-managed, Cloud-managed, Enterprise
