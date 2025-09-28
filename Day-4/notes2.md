@@ -71,7 +71,7 @@ kubectl get pods -n ygminds -o wide
 
 **Frontend/Backend Isolation:** Ensure frontend Pods run on SSD nodes, backend on HDD.
 
-Example db namespace policy:
+Example db label namespace policy:
 ```
 metadata:
   annotations:
