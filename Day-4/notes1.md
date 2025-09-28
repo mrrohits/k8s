@@ -4,7 +4,7 @@ Kubernetes offers multiple ways to control where Pods run in your cluster. This 
 
 ## 📌 1. Force Pod to a Specific Node (nodeName)
 
-👉 You can hard bind a Pod to a node by setting the nodeName field in the Pod spec.
+### 👉 You can hard bind a Pod to a node by setting the nodeName field in the Pod spec.
 ```
 YAML Example:
 
@@ -66,8 +66,8 @@ Method	Use Case	Flexibility
 
 ## 📌 Best Practices
 
-Use nodeSelector or affinity/anti-affinity rules (advanced) instead of nodeName for production.
+Use **nodeSelector** or **affinity/anti-affinity** rules (advanced) instead of nodeName for production.
 
-Label nodes based on hardware (ssd/gpu), zone (us-east-1), or workload type (frontend/backend).
+**Label nodes based** on hardware (ssd/gpu), zone (us-east-1), or workload type (frontend/backend).
 
 Keep labels consistent to avoid scheduling issues.
