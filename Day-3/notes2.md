@@ -30,7 +30,7 @@ Example: tier = frontend
 
 Example: tier in (qa, prod)
 
-####🔹 Example 1: Orphan Pod (no matching controller)
+#### 🔹 Example 1: Orphan Pod (no matching controller)
 ```
 kubectl get pod --show-labels
 kubectl get pod --selector=colour=blue
@@ -107,7 +107,7 @@ spec:
   strategy:
     type: Recreate
 ```
-📌 Deployment Benefits
+### 📌 Deployment Benefits
 
 Reliability → ensures Pods are always available
 
