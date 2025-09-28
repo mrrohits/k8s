@@ -10,38 +10,40 @@ tier: backend
 type: prod
 ```
 
-## ✅ Uses of Labels:
+### ✅ Uses of Labels:
 
-### 1. Filtering → query, list, delete, or get detailed info.
+#### 1. Filtering → query, list, delete, or get detailed info.
 
-### 2. Pod Scheduling → control how Pods are assigned.
+#### 2. Pod Scheduling → control how Pods are assigned.
 
-### 3. Organization → categorize resources logically.
+#### 3. Organization → categorize resources logically.
 
-## 📌 Selector Types
+### 📌 Selector Types
 
 Selectors allow us to filter resources based on labels.
 
-Equality-Based (ReplicationController)
+### 1. Equality-Based (ReplicationController)
 
 Example: tier = frontend
 
-Set-Based (ReplicaSet)
+### 2. Set-Based (ReplicaSet)
 
 Example: tier in (qa, prod)
 
-🔹 Example 1: Orphan Pod (no matching controller)
+####🔹 Example 1: Orphan Pod (no matching controller)
+```
 kubectl get pod --show-labels
 kubectl get pod --selector=colour=blue
-
+```
 
 Output:
-
+```
 NAME              READY   STATUS    RESTARTS   AGE   LABELS
 krnetwork-6f66k   1/1     Running   0          25m   colour=blue
 krnetwork-jwfzw   1/1     Running   0          25m   colour=blue
-
-🔹 Example 2: ReplicaSet with Equality + Set-based Selectors
+```
+#### 🔹 Example 2: ReplicaSet with Equality + Set-based Selectors
+```
 apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
@@ -64,46 +66,47 @@ spec:
       containers:
       - name: nginx
         image: docker.io/nginx
+```
 
-🔄 Rollout & Rollback in Kubernetes
-📌 Deployment Strategies
+### 🔄 Rollout & Rollback in Kubernetes
+#### 📌 Deployment Strategies
 
-Rolling Update (Ramped Mode) ✅
+#### 1.Rolling Update (Ramped Mode) ✅
 
-Zero downtime
+  * Zero downtime
 
-Ideal for production
+  * Ideal for production
 
-Gradual replacement of old Pods with new Pods
+  * Gradual replacement of old Pods with new Pods
 
 Formula:
-
+```
 Create: 25% new Pods  
 Delete: 25% old Pods  
-
+```
 
 Example:
-
+```
 spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 25%
       maxUnavailable: 25%
+```
 
+### Recreate Strategy ⚠️
 
-Recreate Strategy ⚠️
+  * Downtime occurs
 
-Downtime occurs
+  * Old version terminated first, then new version created
 
-Old version terminated first, then new version created
-
-Best for testing environments
-
+  * Best for testing environments
+```
 spec:
   strategy:
     type: Recreate
-
+```
 📌 Deployment Benefits
 
 Reliability → ensures Pods are always available
