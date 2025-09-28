@@ -80,9 +80,8 @@ kubeadm init --apiserver-advertise-address=1<your_ip> --ignore-preflight-errors=
 ```
 
 Configure kubeconfig:
-
-mkdir -p $HOME/.kube
 ```
+mkdir -p $HOME/.kube
 cp /etc/kubernetes/admin.conf $HOME/.kube/config
 ```
 ### 🎯 Why Kubernetes?
