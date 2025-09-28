@@ -84,24 +84,24 @@ Configure kubeconfig:
 mkdir -p $HOME/.kube
 cp /etc/kubernetes/admin.conf $HOME/.kube/config
 
-🎯 Why Kubernetes?
+### 🎯 Why Kubernetes?
 
-Kubernetes is an open-source container orchestration tool that provides:
+#### Kubernetes is an open-source container orchestration tool that provides:
+```
+1. Centralized Management – Manage all container hosts from a single master node.
 
-Centralized Management – Manage all container hosts from a single master node.
+2. Cluster Topology & Failover – Containers can migrate between nodes.
 
-Cluster Topology & Failover – Containers can migrate between nodes.
+3. Reliability – Automatic container recovery reduces downtime.
 
-Reliability – Automatic container recovery reduces downtime.
+4. Scalability – Scale apps up/down horizontally or vertically.
 
-Scalability – Scale apps up/down horizontally or vertically.
+5. User Management – Multiple users can manage clusters.
 
-User Management – Multiple users can manage clusters.
+6. RBAC (Role-Based Access Control) – Assign limited permissions.
 
-RBAC (Role-Based Access Control) – Assign limited permissions.
-
-Project/Namespace Management – Isolate resources per team/project.
-
+7. Project/Namespace Management – Isolate resources per team/project.
+```
 ## 🏗️ Kubernetes Architecture Diagram
 ```
                    +-----------------------------+
@@ -125,9 +125,8 @@ Project/Namespace Management – Isolate resources per team/project.
         | - CRI-O (runtime)   |       | - CRI-O (runtime)   |   |
         |   +-----------------|       |   +-----------------
 ```
-
-## 🏗️ Kubernetes Architecture
-🔹 Control Plane (Master Node)
+# 🏗️ Kubernetes Architecture
+## 🔹 Control Plane (Master Node)
 
 kube-apiserver → Authentication & API validation
 
@@ -141,7 +140,7 @@ Custom scheduling (affinity, taints & tolerations)
 
 kube-controller → Ensures desired state (e.g., replicas=4 pods)
 
-🔹 Worker Nodes (Data Plane)
+## 🔹 Worker Nodes (Data Plane)
 
 CRI-O (Container Runtime) → Runs containers
 
@@ -149,7 +148,7 @@ kubelet → Agent on each node, communicates with API server
 
 kube-proxy → Handles pod networking
 
-☁️ Kubernetes Deployment Models
+# ☁️ Kubernetes Deployment Models
 
 User-Managed → IT team handles infra, OS, deployment, monitoring, storage, upgrades.
 
@@ -169,7 +168,7 @@ SUSE Rancher
 
 VMware Tanzu
 
-✅ Summary
+# ✅ Summary
 
 Installed Kubernetes with CRI-O runtime
 
