@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.17
+        image: nginx:1.14.2
 ```
 
 Let's update the nginx Pods to use the nginx:1.16.1 image instead of the nginx:1.14.2 image.
