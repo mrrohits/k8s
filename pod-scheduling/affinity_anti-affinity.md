@@ -1,4 +1,6 @@
-# In Kubernetes scheduling, the terms **soft** and **hard** typically refer to the **scheduling constraints** or **affinity rules**. These determine how strictly the scheduler should enforce a particular condition when placing Pods on nodes.
+# Affinity and Anti-affinity type Pod Scheduling
+
+In Kubernetes scheduling, the terms **soft** and **hard** typically refer to the **scheduling constraints** or **affinity rules**. These determine how strictly the scheduler should enforce a particular condition when placing Pods on nodes.
 
 * **Hard requirements** (sometimes called **required rules**) are conditions that **must** be satisfied for a Pod to be scheduled.
 * **Soft requirements** (or **preferred rules**) are conditions that the scheduler tries to satisfy, but if they can't be met, the Pod will still be scheduled elsewhere.
