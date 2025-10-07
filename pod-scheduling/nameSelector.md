@@ -2,7 +2,7 @@
 
 NodeSelector is a simple way to constrain Pods to nodes with specific labels. It is the basic form of node affinity and allows you to specify which node a Pod should run on based on node labels.
 ```
-Example:
+
 apiVersion: v1
 kind: Pod
 metadata:
