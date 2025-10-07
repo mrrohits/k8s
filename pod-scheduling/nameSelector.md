@@ -68,8 +68,20 @@ You can also specify **NodeSelector** at the **Deployment** level to constrain P
   * This Deployment will create Pods that only run on nodes labeled `disk=ssd`.
 
 ---
+### **3. Enabling Namespace-Level NodeSelector in Kubernetes API Server**
 
-### **3. NodeSelector at Namespace Level**
+To use **NodeSelector at the namespace level**, you need to enable the `PodNodeSelector` feature in the Kubernetes API server.
+
+* **Steps**:
+
+  * Edit the Kubernetes API server manifest file (`/etc/kubernetes/manifests/kube-apiserver.yaml`).
+  * Add the `PodNodeSelector` parameter to `--enable-admission-plugins`.
+
+* **Reference**: [StackOverflow Link](https://stackoverflow.com/questions/52487333/how-to-assign-a-namespace-to-certain-nodes)
+
+---
+
+### **4. NodeSelector at Namespace Level**
 
 NodeSelector can also be set at the **Namespace** level using annotations. This ensures that all Pods created in that namespace will follow the **nodeSelector** constraint.
 
@@ -107,19 +119,6 @@ NodeSelector can also be set at the **Namespace** level using annotations. This 
 * **Explanation**:
 
   * This configuration ensures that all Pods created within the `ygminds` namespace will be scheduled only on nodes labeled `disk=ssd`.
-
----
-
-### **4. Enabling Namespace-Level NodeSelector in Kubernetes API Server**
-
-To use **NodeSelector at the namespace level**, you need to enable the `PodNodeSelector` feature in the Kubernetes API server.
-
-* **Steps**:
-
-  * Edit the Kubernetes API server manifest file (`/etc/kubernetes/manifests/kube-apiserver.yaml`).
-  * Add the `PodNodeSelector` parameter to `--enable-admission-plugins`.
-
-* **Reference**: [StackOverflow Link](https://stackoverflow.com/questions/52487333/how-to-assign-a-namespace-to-certain-nodes)
 
 ---
 
