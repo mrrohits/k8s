@@ -1,3 +1,88 @@
+
+### 🎯 Why Kubernetes?
+
+#### Kubernetes is an open-source container orchestration tool that provides:
+```
+1. Centralized Management – Manage all container hosts from a single master node.
+
+2. Cluster Topology & Failover – Containers can migrate between nodes.
+
+3. Reliability – Automatic container recovery reduces downtime.
+
+4. Scalability – Scale apps up/down horizontally or vertically.
+
+5. User Management – Multiple users can manage clusters.
+
+6. RBAC (Role-Based Access Control) – Assign limited permissions.
+
+7. Project/Namespace Management – Isolate resources per team/project.
+```
+## 🏗️ Kubernetes Architecture Diagram
+```
+                   +-----------------------------+
+                   |     Control Plane (Master)  |
+                   |-----------------------------|
+                   |  - kube-apiserver           |
+                   |  - etcd (key-value store)   |
+                   |  - kube-scheduler           |
+                   |  - kube-controller-manager  |
+                   +---------------+-------------+
+                                   |
+                                   | API / Instructions
+                                   v
+        ---------------------------------------------------------
+        |                         Worker Nodes                  |
+        |-------------------------------------------------------|
+        | Node-1                      Node-2                   |
+        | ---------------------       ---------------------     |
+        | - kubelet           |       | - kubelet           |   |
+        | - kube-proxy        |       | - kube-proxy        |   |
+        | - CRI-O (runtime)   |       | - CRI-O (runtime)   |   |
+        |   +-----------------|       |   +-----------------
+```
+# 🏗️ Kubernetes Architecture
+## 🔹 Control Plane (Master Node)
+
+kube-apiserver → Authentication & API validation
+
+etcd → Key-value store for cluster state
+
+kube-scheduler → Decides best node for pods
+
+Default scheduling
+
+Custom scheduling (affinity, taints & tolerations)
+
+kube-controller → Ensures desired state (e.g., replicas=4 pods)
+
+## 🔹 Worker Nodes (Data Plane)
+
+CRI-O (Container Runtime) → Runs containers
+
+kubelet → Agent on each node, communicates with API server
+
+kube-proxy → Handles pod networking
+
+# ☁️ Kubernetes Deployment Models
+
+User-Managed → IT team handles infra, OS, deployment, monitoring, storage, upgrades.
+
+Cloud-Managed (PaaS Model) → Control plane handled by cloud providers:
+
+AWS → EKS
+
+GCP → GKE
+
+Azure → AKS
+
+Enterprise Kubernetes (Commercial offerings):
+
+Red Hat OpenShift
+
+SUSE Rancher
+
+VMware Tanzu
+
 # 📘 Lecture 1: Kubernetes Introduction
 
 This document contains installation steps, architecture details, and advantages of Kubernetes for easy reference.
@@ -84,89 +169,7 @@ Configure kubeconfig:
 mkdir -p $HOME/.kube
 cp /etc/kubernetes/admin.conf $HOME/.kube/config
 ```
-### 🎯 Why Kubernetes?
 
-#### Kubernetes is an open-source container orchestration tool that provides:
-```
-1. Centralized Management – Manage all container hosts from a single master node.
-
-2. Cluster Topology & Failover – Containers can migrate between nodes.
-
-3. Reliability – Automatic container recovery reduces downtime.
-
-4. Scalability – Scale apps up/down horizontally or vertically.
-
-5. User Management – Multiple users can manage clusters.
-
-6. RBAC (Role-Based Access Control) – Assign limited permissions.
-
-7. Project/Namespace Management – Isolate resources per team/project.
-```
-## 🏗️ Kubernetes Architecture Diagram
-```
-                   +-----------------------------+
-                   |     Control Plane (Master)  |
-                   |-----------------------------|
-                   |  - kube-apiserver           |
-                   |  - etcd (key-value store)   |
-                   |  - kube-scheduler           |
-                   |  - kube-controller-manager  |
-                   +---------------+-------------+
-                                   |
-                                   | API / Instructions
-                                   v
-        ---------------------------------------------------------
-        |                         Worker Nodes                  |
-        |-------------------------------------------------------|
-        | Node-1                      Node-2                   |
-        | ---------------------       ---------------------     |
-        | - kubelet           |       | - kubelet           |   |
-        | - kube-proxy        |       | - kube-proxy        |   |
-        | - CRI-O (runtime)   |       | - CRI-O (runtime)   |   |
-        |   +-----------------|       |   +-----------------
-```
-# 🏗️ Kubernetes Architecture
-## 🔹 Control Plane (Master Node)
-
-kube-apiserver → Authentication & API validation
-
-etcd → Key-value store for cluster state
-
-kube-scheduler → Decides best node for pods
-
-Default scheduling
-
-Custom scheduling (affinity, taints & tolerations)
-
-kube-controller → Ensures desired state (e.g., replicas=4 pods)
-
-## 🔹 Worker Nodes (Data Plane)
-
-CRI-O (Container Runtime) → Runs containers
-
-kubelet → Agent on each node, communicates with API server
-
-kube-proxy → Handles pod networking
-
-# ☁️ Kubernetes Deployment Models
-
-User-Managed → IT team handles infra, OS, deployment, monitoring, storage, upgrades.
-
-Cloud-Managed (PaaS Model) → Control plane handled by cloud providers:
-
-AWS → EKS
-
-GCP → GKE
-
-Azure → AKS
-
-Enterprise Kubernetes (Commercial offerings):
-
-Red Hat OpenShift
-
-SUSE Rancher
-
-VMware Tanzu
 
 # ✅ Summary
 
