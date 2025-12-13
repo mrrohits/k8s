@@ -29,7 +29,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test
+  name: nginx-deployment
   labels:
     app: test
 spec:
