@@ -1,20 +1,31 @@
-# Mirroring
+# Mirroring Traffic with Istio
 
-This task demonstrates the traffic mirroring capabilities of Istio.
+This task demonstrates Istio traffic mirroring, also known as shadowing. Instead of sending user requests to a new version of a service, you duplicate a portion of the live traffic and send it to the new version for testing, while the original request still goes to the stable version.
 
-Traffic mirroring, also called shadowing, is a powerful concept that allows feature teams to bring changes to production with as little risk as possible. Mirroring sends a copy of live traffic to a mirrored service. The mirrored traffic happens out of band of the critical request path for the primary service.
+This is useful when you want to validate a new release under real production traffic without affecting user-facing behavior.
 
-In this task, you will first force all traffic to v1 of a test service. Then, you will apply a rule to mirror a portion of traffic to v2.
+In this lab, we will:
 
-## Before you begin
+1. Deploy two versions of the `httpbin` service: `v1` and `v2`
+2. Force all traffic to `v1`
+3. Mirror traffic from `v1` to `v2`
+4. Verify the logs for both versions
+5. Clean up the environment
 
-1. Set up Istio by following the Installation guide.
+## Prerequisites
 
-2. Start by deploying two versions of the httpbin service that have access logging enabled:
+- A Kubernetes cluster
+- `kubectl` configured to the cluster
+- Istio installed and working
 
-- Deploy **httpbin-v1**:
+If you have not installed Istio yet, follow the Istio installation guide for your platform.
 
-kubectl create -f - <<EOF
+## 1) Deploy the application
+
+Create the two `httpbin` deployments and the `httpbin` service.
+
+```bash
+kubectl apply -f - <<EOF
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -32,13 +43,12 @@ spec:
         version: v1
     spec:
       containers:
-      - image: docker.io/kennethreitz/httpbin
+      - name: httpbin
+        image: docker.io/kennethreitz/httpbin
         imagePullPolicy: IfNotPresent
-        name: httpbin
         command: ["gunicorn", "--access-logfile", "-", "-b", "[::]:80", "httpbin:app"]
         ports:
         - containerPort: 80
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -57,13 +67,12 @@ spec:
         version: v2
     spec:
       containers:
-      - image: docker.io/kennethreitz/httpbin
+      - name: httpbin
+        image: docker.io/kennethreitz/httpbin
         imagePullPolicy: IfNotPresent
-        name: httpbin
         command: ["gunicorn", "--access-logfile", "-", "-b", "[::]:80", "httpbin:app"]
         ports:
         - containerPort: 80
-
 ---
 apiVersion: v1
 kind: Service
@@ -72,22 +81,47 @@ metadata:
   labels:
     app: httpbin
 spec:
+  selector:
+    app: httpbin
   ports:
   - name: http
     port: 8000
     targetPort: 80
-  selector:
-    app: httpbin
 EOF
+```
 
-## Creating a default routing policy
+Next, deploy a `curl` workload to generate traffic:
 
-By default Kubernetes load balances across both versions of the httpbin service. In this step, you will change that behavior so that all traffic goes to v1.
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: curl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: curl
+  template:
+    metadata:
+      labels:
+        app: curl
+    spec:
+      containers:
+      - name: curl
+        image: curlimages/curl
+        command: ["/bin/sleep", "3650d"]
+        imagePullPolicy: IfNotPresent
+EOF
+```
 
-1. Create a default route rule to route all traffic to v1 of the service:
+## 2) Set a default route to v1
 
-kubectl create -f - <<EOF
+By default, Kubernetes does not know about application versions. If both pods are selected by the `httpbin` service, traffic is distributed across both versions. To control this, we define a `VirtualService` and a `DestinationRule`.
 
+```bash
+kubectl apply -f - <<EOF
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
@@ -116,10 +150,25 @@ spec:
     labels:
       version: v2
 EOF
+```
 
-2. Now, with all traffic directed to httpbin:v1, send a request to the service:
+This tells Istio:
 
- kubectl exec deploy/curl -c curl -- curl -sS http://httpbin:8000/headers
+- all traffic for `httpbin` should go to the backend subset `v1`
+- `v1` is selected by the label `version: v1`
+- `v2` is defined for later mirroring
+
+## 3) Send a request and validate v1 receives it
+
+Now send a request through the service:
+
+```bash
+kubectl exec deploy/curl -c curl -- curl -sS http://httpbin:8000/headers
+```
+
+Example response:
+
+```json
 {
   "headers": {
     "Accept": "*/*",
@@ -129,211 +178,40 @@ EOF
     "X-B3-Parentspanid": "57784f8bff90ae0b",
     "X-B3-Sampled": "1",
     "X-B3-Spanid": "3289ae7257c3f159",
-    "X-B3-Traceid": "b56eebd279a76f0b57784f8bff90ae0b",
-    "X-Envoy-Attempt-Count": "1",
-    "X-Forwarded-Client-Cert": "By=spiffe://cluster.local/ns/default/sa/default;Hash=20afebed6da091c850264cc751b8c9306abac02993f80bdb76282237422bd098;Subject=\"\";URI=spiffe://cluster.local/ns/default/sa/default"
+    "X-B3-Traceid": "b56eebd279a76f0b57784f8bff90ae0b"
   }
 }
+```
 
+Check the access logs on both versions:
 
-3. Check the logs from httpbin-v1 and httpbin-v2 pods. You should see access log entries for v1 and none for v2:
-
+```bash
 kubectl logs deploy/httpbin-v1 -c httpbin
+kubectl logs deploy/httpbin-v2 -c httpbin
+```
 
+Expected result:
+
+- `httpbin-v1` shows the request log
+- `httpbin-v2` shows no traffic yet
+
+Example log from `v1`:
+
+```text
 127.0.0.1 - - [07/Mar/2018:19:02:43 +0000] "GET /headers HTTP/1.1" 200 321 "-" "curl/7.35.0"
+```
 
- kubectl logs deploy/httpbin-v2 -c httpbin
- 
+`v2` should remain empty:
+
+```text
 <none>
+```
 
-# 
-Documentation Tasks Traffic Management Mirroring
-Mirroring
- 6 minute read     page test
+## 4) Mirror production traffic to v2
 
-A template bug in the Istio website code means that the examples on this page do not render properly. You can view the page source to see the correct manifests.
-This task demonstrates the traffic mirroring capabilities of Istio.
+Now add the mirror rule. The original request continues to `v1`, but a copy is sent to `v2`.
 
-Traffic mirroring, also called shadowing, is a powerful concept that allows feature teams to bring changes to production with as little risk as possible. Mirroring sends a copy of live traffic to a mirrored service. The mirrored traffic happens out of band of the critical request path for the primary service.
-
-In this task, you will first force all traffic to v1 of a test service. Then, you will apply a rule to mirror a portion of traffic to v2.
-
-Istio supports the Kubernetes Gateway API and intends to make it the default API for traffic management in the future. The following instructions allow you to choose to use either the Gateway API or the Istio configuration API when configuring traffic management in the mesh. Follow instructions under either the Gateway API or Istio APIs tab, according to your preference.
-
-Note that the Kubernetes Gateway API CRDs do not come installed by default on most Kubernetes clusters, so make sure they are installed before using the Gateway API:
-
-$ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
-  kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.0/experimental-install.yaml
-
-Before you begin
-Set up Istio by following the Installation guide.
-
-Start by deploying two versions of the httpbin service that have access logging enabled:
-
-Deploy httpbin-v1:
-
-$ kubectl create -f - <<EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: httpbin-v1
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: httpbin
-      version: v1
-  template:
-    metadata:
-      labels:
-        app: httpbin
-        version: v1
-    spec:
-      containers:
-      - image: docker.io/kennethreitz/httpbin
-        imagePullPolicy: IfNotPresent
-        name: httpbin
-        command: ["gunicorn", "--access-logfile", "-", "-b", "[::]:80", "httpbin:app"]
-        ports:
-        - containerPort: 80
-EOF
-
-Deploy httpbin-v2:
-
- kubectl create -f - <<EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: httpbin-v2
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: httpbin
-      version: v2
-  template:
-    metadata:
-      labels:
-        app: httpbin
-        version: v2
-    spec:
-      containers:
-      - image: docker.io/kennethreitz/httpbin
-        imagePullPolicy: IfNotPresent
-        name: httpbin
-        command: ["gunicorn", "--access-logfile", "-", "-b", "[::]:80", "httpbin:app"]
-        ports:
-        - containerPort: 80
-EOF
-
-Deploy the httpbin Kubernetes service:
-
- kubectl create -f - <<EOF
-apiVersion: v1
-kind: Service
-metadata:
-  name: httpbin
-  labels:
-    app: httpbin
-spec:
-  ports:
-  - name: http
-    port: 8000
-    targetPort: 80
-  selector:
-    app: httpbin
-EOF
-
-Deploy the curl workload you’ll use to send requests to the httpbin service:
-
- cat <<EOF | kubectl create -f -
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: curl
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: curl
-  template:
-    metadata:
-      labels:
-        app: curl
-    spec:
-      containers:
-      - name: curl
-        image: curlimages/curl
-        command: ["/bin/sleep","3650d"]
-        imagePullPolicy: IfNotPresent
-EOF
-
-Creating a default routing policy
-By default Kubernetes load balances across both versions of the httpbin service. In this step, you will change that behavior so that all traffic goes to v1.
-
-Create a default route rule to route all traffic to v1 of the service:
-
-
- kubectl apply -f - <<EOF
-apiVersion: networking.istio.io/v1
-kind: VirtualService
-metadata:
-  name: httpbin
-spec:
-  hosts:
-- httpbin
-  http:
-  - route:
-- destination:
-    host: httpbin
-    subset: v1
-  weight: 100
----
-apiVersion: networking.istio.io/v1
-kind: DestinationRule
-metadata:
-  name: httpbin
-spec:
-  host: httpbin
-  subsets:
-  - name: v1
-labels:
-  version: v1
-  - name: v2
-labels:
-  version: v2
-EOF
-
-Now, with all traffic directed to httpbin:v1, send a request to the service:
-
- kubectl exec deploy/curl -c curl -- curl -sS http://httpbin:8000/headers
-{
-  "headers": {
-    "Accept": "*/*",
-    "Content-Length": "0",
-    "Host": "httpbin:8000",
-    "User-Agent": "curl/7.35.0",
-    "X-B3-Parentspanid": "57784f8bff90ae0b",
-    "X-B3-Sampled": "1",
-    "X-B3-Spanid": "3289ae7257c3f159",
-    "X-B3-Traceid": "b56eebd279a76f0b57784f8bff90ae0b",
-    "X-Envoy-Attempt-Count": "1",
-    "X-Forwarded-Client-Cert": "By=spiffe://cluster.local/ns/default/sa/default;Hash=20afebed6da091c850264cc751b8c9306abac02993f80bdb76282237422bd098;Subject=\"\";URI=spiffe://cluster.local/ns/default/sa/default"
-  }
-}
-
-Check the logs from httpbin-v1 and httpbin-v2 pods. You should see access log entries for v1 and none for v2:
-
-$ kubectl logs deploy/httpbin-v1 -c httpbin
-127.0.0.1 - - [07/Mar/2018:19:02:43 +0000] "GET /headers HTTP/1.1" 200 321 "-" "curl/7.35.0"
-
-$ kubectl logs deploy/httpbin-v2 -c httpbin
-<none>
-
-# Mirroring traffic to httpbin-v2
-
-1. Change the route rule to mirror traffic to **httpbin-v2**:
-
+```bash
 kubectl apply -f - <<EOF
 apiVersion: networking.istio.io/v1
 kind: VirtualService
@@ -354,53 +232,86 @@ spec:
     mirrorPercentage:
       value: 100.0
 EOF
+```
 
-2. Send the traffic:
+Important clarification:
 
-$ kubectl exec deploy/curl -c curl -- curl -sS http://httpbin:8000/headers
+- `route` controls the actual user-facing traffic
+- `mirror` creates a shadow copy of the request
+- the result returned to the client still comes from `v1`
+- `v2` receives a duplicated request for observation, testing, or telemetry
 
-Now, you should see access logging for both v1 and v2. The access logs created in v2 are the mirrored requests that are actually going to v1.
+## 5) Send traffic and validate mirroring
 
+Send another request:
+
+```bash
+kubectl exec deploy/curl -c curl -- curl -sS http://httpbin:8000/headers
+```
+
+Now inspect logs:
+
+```bash
+kubectl logs deploy/httpbin-v1 -c httpbin
+kubectl logs deploy/httpbin-v2 -c httpbin
+```
+
+Expected behavior:
+
+- `httpbin-v1` logs the original requests
+- `httpbin-v2` logs mirrored requests as well
+
+Example output:
+
+```text
 $ kubectl logs deploy/httpbin-v1 -c httpbin
-
 127.0.0.1 - - [07/Mar/2018:19:02:43 +0000] "GET /headers HTTP/1.1" 200 321 "-" "curl/7.35.0"
 127.0.0.1 - - [07/Mar/2018:19:26:44 +0000] "GET /headers HTTP/1.1" 200 321 "-" "curl/7.35.0"
 
 $ kubectl logs deploy/httpbin-v2 -c httpbin
-
 127.0.0.1 - - [07/Mar/2018:19:26:44 +0000] "GET /headers HTTP/1.1" 200 361 "-" "curl/7.35.0"
 127.0.0.1 - - [07/Mar/2018:19:26:44 +0000] "GET /headers HTTP/1.1" 200 361 "-" "curl/7.35.0"
-
-## Cleaning up
-
-1. Remove the rules:
 ```
-$ kubectl delete virtualservice httpbin
-$ kubectl delete destinationrule httpbin
-```
-2. Delete httpbin and curl deployments and httpbin service:
 
+Notice the behavior:
+
+- the user still receives the response from `v1`
+- the mirrored traffic is only copied to `v2`
+- the mirrored requests can help you verify the new version under real traffic conditions without impacting the production experience
+
+## Why mirroring is valuable
+
+Traffic mirroring is ideal for:
+
+- canary validation with real traffic
+- testing new versions against production-like requests
+- collecting logs, metrics, or traces from a candidate deployment
+- reducing release-risk without user-facing impact
+
+For production, you usually do not mirror 100% of requests. Instead, you may use a lower percentage such as 5%, 10%, or 20%, depending on your risk appetite.
+
+## Clean up
+
+Delete the VirtualService and DestinationRule:
+
+```bash
+kubectl delete virtualservice httpbin
+kubectl delete destinationrule httpbin
 ```
+
+Delete the workloads and service:
+
+```bash
 kubectl delete deploy httpbin-v1 httpbin-v2 curl
 kubectl delete svc httpbin
-
 ```
 
+## Summary
 
+This lab showed how Istio can:
 
+- route all traffic to a stable version
+- duplicate or mirror traffic to a test version
+- let you validate a release using real traffic without risking the user experience
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Traffic mirroring is one of the most practical techniques for safe progressive delivery in service mesh environments.
